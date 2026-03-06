@@ -1,9 +1,6 @@
 import { Context, InlineKeyboard } from 'grammy';
-import { Keypair } from '@solana/web3.js';
-import bs58 from 'bs58';
 import { getCreator } from '../../db/creators';
 import { getChatByChatId, createChat } from '../../db/chats';
-import { decrypt } from '../../utils/encrypt';
 import { generateTicker } from '../../utils/ticker';
 import { buildTweetUrl } from '../../utils/tweet';
 import { launchChatToken } from '../../bags/launch';
@@ -60,7 +57,6 @@ export async function handleThresholdCallback(ctx: Context) {
     await ctx.editMessageText(`Launching token... threshold: $${thresholdK}k`);
   } catch {}
 
-  // Derive fan info — in the relay model this is the person who /start'd the bot
   const chatContext = ctx.callbackQuery?.message?.chat;
   const fanUsername = chatContext?.type === 'private' && chatContext.username
     ? chatContext.username
@@ -70,11 +66,7 @@ export async function handleThresholdCallback(ctx: Context) {
 
   let tokenMint: string;
   try {
-    const privateKey = decrypt(creator.encrypted_private_key);
-    const decoded = bs58.decode(privateKey);
-    const keypair = Keypair.fromSecretKey(decoded);
-
-    tokenMint = await launchChatToken(keypair, ticker, fanUsername ?? 'anon');
+    tokenMint = await launchChatToken(creator.wallet_address, ticker, fanUsername ?? 'anon');
 
     await createChat(
       chatId,
@@ -93,7 +85,6 @@ export async function handleThresholdCallback(ctx: Context) {
     return true;
   }
 
-  // Lock message visible to both parties in the chat
   try {
     await ctx.editMessageText(
       `🔒 this chat is locked\n\n` +
@@ -103,7 +94,6 @@ export async function handleThresholdCallback(ctx: Context) {
     );
   } catch {}
 
-  // DM creator with share buttons
   const tweetUrl = buildTweetUrl(ticker, thresholdK, tokenMint);
   const shareKeyboard = new InlineKeyboard()
     .url('Share on Twitter 🐦', tweetUrl);

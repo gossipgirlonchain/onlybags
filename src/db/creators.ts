@@ -4,8 +4,8 @@ export interface Creator {
   id: number;
   telegram_user_id: number;
   telegram_username: string | null;
+  twitter_username: string;
   wallet_address: string;
-  encrypted_private_key: string;
   created_at: Date;
 }
 
@@ -28,14 +28,14 @@ export async function getCreatorByUsername(username: string): Promise<Creator | 
 export async function createCreator(
   telegramUserId: number,
   telegramUsername: string | null,
+  twitterUsername: string,
   walletAddress: string,
-  encryptedPrivateKey: string,
 ): Promise<Creator> {
   const { rows } = await pool.query(
-    `INSERT INTO creators (telegram_user_id, telegram_username, wallet_address, encrypted_private_key)
+    `INSERT INTO creators (telegram_user_id, telegram_username, twitter_username, wallet_address)
      VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [telegramUserId, telegramUsername, walletAddress, encryptedPrivateKey],
+    [telegramUserId, telegramUsername, twitterUsername, walletAddress],
   );
   return rows[0];
 }

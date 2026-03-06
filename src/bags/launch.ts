@@ -2,28 +2,33 @@ import {
   BagsSDK,
   signAndSendTransaction,
   sendBundleAndConfirm,
-  createTipTransaction,
   waitForSlotsToPass,
 } from '@bagsfm/bags-sdk';
 import {
   Connection,
   Keypair,
   PublicKey,
-  VersionedTransaction,
 } from '@solana/web3.js';
+import bs58 from 'bs58';
 
 const PLATFORM_WALLET = new PublicKey(process.env.BAGS_PLATFORM_WALLET!);
 
+function getServerKeypair(): Keypair {
+  const key = process.env.SERVER_PRIVATE_KEY;
+  if (!key) throw new Error('SERVER_PRIVATE_KEY not set');
+  return Keypair.fromSecretKey(bs58.decode(key));
+}
+
 export async function launchChatToken(
-  creatorKeypair: Keypair,
+  creatorWalletAddress: string,
   ticker: string,
   fanUsername: string,
 ): Promise<string> {
+  const serverKeypair = getServerKeypair();
   const connection = new Connection(process.env.SOLANA_RPC_URL!);
   const sdk = new BagsSDK(process.env.BAGS_API_KEY!, connection, 'processed');
   const commitment = sdk.state.getCommitment();
 
-  // 1. Create token metadata
   const tokenInfo = await sdk.tokenLaunch.createTokenInfoAndMetadata({
     imageUrl: 'https://onlybags.xyz/default-token-image.png',
     name: `${ticker} Pass`,
@@ -34,29 +39,28 @@ export async function launchChatToken(
   });
 
   const tokenMint = new PublicKey(tokenInfo.tokenMint);
+  const creatorWallet = new PublicKey(creatorWalletAddress);
 
-  // 2. Fee share config — 75% creator, 25% OnlyBags platform
+  // 75% to creator, 25% to OnlyBags platform
   const feeClaimers = [
-    { user: creatorKeypair.publicKey, userBps: 7500 },
+    { user: creatorWallet, userBps: 7500 },
     { user: PLATFORM_WALLET, userBps: 2500 },
   ];
 
   const configResult = await sdk.config.createBagsFeeShareConfig({
     feeClaimers,
-    payer: creatorKeypair.publicKey,
+    payer: serverKeypair.publicKey,
     baseMint: tokenMint,
   });
 
-  // Sign and send config transactions
   for (const tx of configResult.transactions) {
-    await signAndSendTransaction(connection, commitment, tx, creatorKeypair);
+    await signAndSendTransaction(connection, commitment, tx, serverKeypair);
     await waitForSlotsToPass(connection, commitment);
   }
 
-  // Send any bundles (Jito bundles for config setup)
   for (const bundle of configResult.bundles) {
     const signed = bundle.map((tx) => {
-      tx.sign([creatorKeypair]);
+      tx.sign([serverKeypair]);
       return tx;
     });
     await sendBundleAndConfirm(signed, sdk);
@@ -64,17 +68,15 @@ export async function launchChatToken(
 
   const configKey = configResult.meteoraConfigKey;
 
-  // 3. Create launch transaction — no initial buy
   const launchTx = await sdk.tokenLaunch.createLaunchTransaction({
     metadataUrl: tokenInfo.tokenMetadata,
     tokenMint,
-    launchWallet: creatorKeypair.publicKey,
+    launchWallet: serverKeypair.publicKey,
     initialBuyLamports: 0,
     configKey,
   });
 
-  // 4. Sign and send
-  await signAndSendTransaction(connection, commitment, launchTx, creatorKeypair);
+  await signAndSendTransaction(connection, commitment, launchTx, serverKeypair);
 
   return tokenInfo.tokenMint;
 }

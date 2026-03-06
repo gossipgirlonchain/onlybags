@@ -1,5 +1,5 @@
 import { Bot } from 'grammy';
-import { setupCommand, handleSetupKey } from './commands/setup';
+import { setupCommand, handleSetupTwitter } from './commands/setup';
 import { lockCommand, handleThresholdCallback } from './commands/lock';
 import { statusCommand } from './commands/status';
 import { getCreatorByUsername, getCreator } from '../db/creators';
@@ -81,8 +81,7 @@ bot.command('start', async (ctx) => {
 
 // --- Message relay ---
 bot.on('message:text', async (ctx) => {
-  // Check if this is a setup key being sent
-  const handled = await handleSetupKey(ctx);
+  const handled = await handleSetupTwitter(ctx);
   if (handled) return;
 
   const chatId = ctx.chat?.id;

@@ -11,8 +11,8 @@ export async function initDB() {
       id SERIAL PRIMARY KEY,
       telegram_user_id BIGINT UNIQUE NOT NULL,
       telegram_username TEXT,
+      twitter_username TEXT NOT NULL,
       wallet_address TEXT NOT NULL,
-      encrypted_private_key TEXT NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
@@ -39,6 +39,16 @@ export async function initDB() {
   `);
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_chats_creator ON chats(creator_telegram_id);
+  `);
+
+  // Migration: drop legacy column if it exists
+  await pool.query(`
+    ALTER TABLE creators DROP COLUMN IF EXISTS encrypted_private_key;
+  `);
+
+  // Migration: add twitter_username if missing
+  await pool.query(`
+    ALTER TABLE creators ADD COLUMN IF NOT EXISTS twitter_username TEXT;
   `);
 
   console.log('Database initialized');
