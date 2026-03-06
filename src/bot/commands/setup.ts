@@ -12,7 +12,7 @@ export async function setupCommand(ctx: Context) {
   if (!userId) return;
 
   if (ctx.chat?.type !== 'private') {
-    await ctx.reply('DM me to set up: @OnlyBagsBot');
+    await ctx.reply('DM me to set up: @onlybagsappbot');
     return;
   }
 
@@ -65,7 +65,7 @@ export async function handleSetupKey(ctx: Context) {
   await ctx.reply(
     `✅ You're set up.\nWallet: \`${walletAddress}\`\n\n` +
     'Share your OnlyBags link with fans:\n' +
-    `\`https://t.me/OnlyBagsBot?start=${username ?? userId}\`\n\n` +
+    `\`https://t.me/onlybagsappbot?start=${username ?? userId}\`\n\n` +
     'When a fan messages you through the bot, type /lock to gate the conversation.',
     { parse_mode: 'Markdown' },
   );

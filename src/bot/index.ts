@@ -22,7 +22,7 @@ bot.on('callback_query:data', async (ctx) => {
 
 // --- /start deep link (relay entry point) ---
 bot.command('start', async (ctx) => {
-  const payload = ctx.match; // e.g. "winny" from t.me/OnlyBagsBot?start=winny
+  const payload = ctx.match; // e.g. "winny" from t.me/onlybagsappbot?start=winny
   if (!payload) {
     await ctx.reply(
       '👋 Welcome to OnlyBags\n\n' +
@@ -53,7 +53,7 @@ bot.command('start', async (ctx) => {
   if (fanId === creator.telegram_user_id) {
     await ctx.reply(
       'That\'s your own link! Share it with fans:\n' +
-      `\`https://t.me/OnlyBagsBot?start=${creator.telegram_username ?? creator.telegram_user_id}\``,
+      `\`https://t.me/onlybagsappbot?start=${creator.telegram_username ?? creator.telegram_user_id}\``,
       { parse_mode: 'Markdown' },
     );
     return;

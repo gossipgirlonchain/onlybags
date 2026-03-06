@@ -30,7 +30,7 @@ export async function launchChatToken(
     symbol: ticker.toUpperCase(),
     description: `Unlock DMs. Pump $${ticker.toUpperCase()} to reach the threshold.`,
     website: 'https://onlybags.xyz',
-    telegram: 'https://t.me/onlybagsbot',
+    telegram: 'https://t.me/onlybagsappbot',
   });
 
   const tokenMint = new PublicKey(tokenInfo.tokenMint);
