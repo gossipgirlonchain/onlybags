@@ -1,16 +1,15 @@
 {
-  "name": "onlybags",
-  "version": "1.0.0",
-  "description": "Telegram bot that locks DMs behind a Bags token market cap threshold",
+  "name": "gatekeep",
+  "version": "2.0.0",
+  "description": "Telegram bot for gated access to creator DMs, powered by Doppler Protocol on Base",
   "main": "src/index.ts",
   "scripts": {
     "dev": "npx ts-node src/index.ts",
     "start": "npx ts-node src/index.ts"
   },
   "dependencies": {
-    "@bagsfm/bags-sdk": "latest",
-    "@solana/web3.js": "^1.95.0",
-    "bs58": "^6.0.0",
+    "@whetstone-research/doppler-sdk": "latest",
+    "viem": "^2.0.0",
     "grammy": "^1.30.0",
     "pg": "^8.13.0",
     "dotenv": "^16.0.0",

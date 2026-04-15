@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { getLockedChats, updateChatMC, markChatUnlocked } from '../db/chats';
-import { getTokenMarketCapUsd } from '../bags/mc';
+import { getTokenMarketCapUsd } from '../doppler/mc';
 import { bot } from '../bot';
 
 export function startPoller() {
@@ -13,27 +13,21 @@ export function startPoller() {
     console.log(`[poller] Checking ${lockedChats.length} locked chat(s)`);
 
     for (const chat of lockedChats) {
+      if (!chat.token_address) continue;
+
       try {
-        const mc = await getTokenMarketCapUsd(chat.token_mint);
+        const mc = await getTokenMarketCapUsd(chat.token_address);
         await updateChatMC(chat.chat_id, mc);
 
         if (mc >= chat.threshold_usd) {
           await markChatUnlocked(chat.chat_id);
-
-          const thresholdK = chat.threshold_usd / 1000;
           const mcK = (mc / 1000).toFixed(0);
 
-          await bot.api.sendMessage(
-            chat.chat_id,
-            `🔓 threshold hit! $${chat.ticker} reached $${mcK}k\n\nDMs are now open. Send a message!`,
-          );
-
-          // Also notify the creator
           try {
             await bot.api.sendMessage(
               chat.creator_telegram_id,
-              `🔓 $${chat.ticker} hit $${mcK}k — chat unlocked!\n\n` +
-              `bags.fm/${chat.token_mint}`,
+              `🔓 $${chat.ticker} hit $${mcK}k, DMs unlocked\n\n` +
+              `app.doppler.lol/tokens/${chat.token_address}`,
             );
           } catch {}
 

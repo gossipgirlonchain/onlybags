@@ -5,7 +5,7 @@ import { startPoller } from './poller';
 import { startWebServer } from './web';
 
 async function main() {
-  console.log('OnlyBags starting...');
+  console.log('GateKeep starting...');
 
   await initDB();
   startPoller();
@@ -19,7 +19,7 @@ async function main() {
     await startBot();
   }
 
-  console.log('OnlyBags is live ✓');
+  console.log('GateKeep is live');
 }
 
 main().catch((err) => {

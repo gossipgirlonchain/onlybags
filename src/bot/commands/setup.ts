@@ -1,23 +1,26 @@
 import { Context } from 'grammy';
-import { Connection } from '@solana/web3.js';
-import { BagsSDK } from '@bagsfm/bags-sdk';
 import { getCreator, createCreator } from '../../db/creators';
 
-const pendingSetups = new Map<number, true>();
+interface PendingSetup {
+  step: 'twitter' | 'wallet';
+  twitterUsername?: string;
+}
+
+const pendingSetups = new Map<number, PendingSetup>();
 
 export async function setupCommand(ctx: Context) {
   const userId = ctx.from?.id;
   if (!userId) return;
 
   if (ctx.chat?.type !== 'private') {
-    await ctx.reply('DM me to set up: @onlybagsappbot');
+    await ctx.reply('DM me to set up: @gatekeepbot');
     return;
   }
 
   const existing = await getCreator(userId);
   if (existing) {
     await ctx.reply(
-      `You're already set up.\n` +
+      `already set up\n\n` +
       `Twitter: @${existing.twitter_username}\n` +
       `Wallet: \`${existing.wallet_address}\``,
       { parse_mode: 'Markdown' },
@@ -25,48 +28,53 @@ export async function setupCommand(ctx: Context) {
     return;
   }
 
-  pendingSetups.set(userId, true);
-  await ctx.reply('What\'s your Twitter/X username? (without the @)');
+  pendingSetups.set(userId, { step: 'twitter' });
+  await ctx.reply("what's your Twitter/X username? (without the @)");
 }
 
-export async function handleSetupTwitter(ctx: Context) {
+export async function handleSetupInput(ctx: Context) {
   const userId = ctx.from?.id;
   const telegramUsername = ctx.from?.username ?? null;
-  if (!userId || !pendingSetups.has(userId)) return false;
+  if (!userId) return false;
+
+  const pending = pendingSetups.get(userId);
+  if (!pending) return false;
   if (ctx.chat?.type !== 'private') return false;
 
   const text = ctx.message?.text?.trim();
   if (!text) return false;
 
-  pendingSetups.delete(userId);
-
-  // Strip @ if they included it
-  const twitterUsername = text.replace(/^@/, '');
-
-  try {
-    const connection = new Connection(process.env.SOLANA_RPC_URL!);
-    const sdk = new BagsSDK(process.env.BAGS_API_KEY!, connection, 'processed');
-
-    const result = await sdk.state.getLaunchWalletV2(twitterUsername, 'twitter');
-    const walletAddress = result.wallet.toBase58();
-
-    await createCreator(userId, telegramUsername, twitterUsername, walletAddress);
-
+  if (pending.step === 'twitter') {
+    const twitterUsername = text.replace(/^@/, '');
+    pendingSetups.set(userId, { step: 'wallet', twitterUsername });
     await ctx.reply(
-      `✅ Connected. Fees will go to your Bags wallet:\n` +
-      `\`${walletAddress}\`\n\n` +
-      `Share your OnlyBags link with fans:\n` +
-      `\`https://t.me/onlybagsappbot?start=${telegramUsername ?? userId}\`\n\n` +
-      `Type /lock in any chat to start gating your DMs.`,
-      { parse_mode: 'Markdown' },
+      `got it, @${twitterUsername}\n\n` +
+      'now enter your Base wallet address (0x...) where fees will go:',
     );
-  } catch (err) {
-    console.error('[setup] Bags wallet lookup failed:', err);
-    await ctx.reply(
-      `Couldn't find a Bags account for @${twitterUsername}. ` +
-      `Make sure you've signed up at bags.fm first, then try /setup again.`,
-    );
+    return true;
   }
 
-  return true;
+  if (pending.step === 'wallet') {
+    const wallet = text.trim();
+    if (!/^0x[a-fA-F0-9]{40}$/.test(wallet)) {
+      await ctx.reply("doesn't look like a valid address. enter a 0x... wallet:");
+      return true;
+    }
+
+    const twitterUsername = pending.twitterUsername!;
+    pendingSetups.delete(userId);
+
+    await createCreator(userId, telegramUsername, twitterUsername, wallet);
+
+    await ctx.reply(
+      `connected\n\n` +
+      `Twitter: @${twitterUsername}\n` +
+      `Wallet: \`${wallet}\`\n\n` +
+      `when someone DMs you, type /lock to gate the conversation with a token`,
+      { parse_mode: 'Markdown' },
+    );
+    return true;
+  }
+
+  return false;
 }
