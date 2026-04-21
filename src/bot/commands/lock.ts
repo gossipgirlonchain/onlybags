@@ -11,7 +11,7 @@ export async function lockCommand(ctx: Context) {
   if (!userId) return;
 
   if (ctx.chat?.type !== 'private') {
-    await ctx.reply('DM me to lock: @gatekeepbot');
+    await ctx.reply('DM me to lock: @gatekeepfunbot');
     return;
   }
 

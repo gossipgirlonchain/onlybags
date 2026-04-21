@@ -13,7 +13,7 @@ export async function setupCommand(ctx: Context) {
   if (!userId) return;
 
   if (ctx.chat?.type !== 'private') {
-    await ctx.reply('DM me to set up: @gatekeepbot');
+    await ctx.reply('DM me to set up: @gatekeepfunbot');
     return;
   }
 
