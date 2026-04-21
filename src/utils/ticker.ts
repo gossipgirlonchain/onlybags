@@ -1,10 +1,8 @@
-const WORDS = [
-  'BAGS', 'CHAT', 'DMS', 'LOCK', 'PUMP', 'PASS',
-  'GATE', 'KEY', 'OPEN', 'LFG', 'SEND', 'VIBE',
-];
+const MAX_LEN = 10;
+const FALLBACK = 'GATE';
 
-export function generateTicker(): string {
-  const word = WORDS[Math.floor(Math.random() * WORDS.length)];
-  const suffix = Math.random().toString(36).slice(2, 4).toUpperCase();
-  return `${word}${suffix}`;
+export function generateTicker(twitterUsername: string): string {
+  const cleaned = twitterUsername.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (cleaned.length === 0) return FALLBACK;
+  return cleaned.slice(0, MAX_LEN);
 }

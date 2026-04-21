@@ -47,7 +47,7 @@ export async function handleLockCallback(ctx: Context) {
 
   await ctx.answerCallbackQuery({ text: 'launching token...' });
 
-  const ticker = generateTicker();
+  const ticker = generateTicker(creator.twitter_username);
   const launchId = crypto.randomUUID();
 
   try {
