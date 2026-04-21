@@ -22,14 +22,27 @@ export function startPoller() {
         if (mc >= chat.threshold_usd) {
           await markChatUnlocked(chat.chat_id);
           const mcK = (mc / 1000).toFixed(0);
+          const fanLabel = chat.fan_username ? `@${chat.fan_username}` : 'fan';
+          const tokenUrl = `app.doppler.lol/tokens/${chat.token_address}`;
 
           try {
             await bot.api.sendMessage(
               chat.creator_telegram_id,
-              `🔓 $${chat.ticker} hit $${mcK}k, DMs unlocked\n\n` +
-              `app.doppler.lol/tokens/${chat.token_address}`,
+              `🔓 $${chat.ticker} hit $${mcK}k\n\n` +
+              `${fanLabel} unlocked your DMs. you can reply now.\n` +
+              `${tokenUrl}`,
             );
           } catch {}
+
+          if (chat.fan_telegram_id) {
+            try {
+              await bot.api.sendMessage(
+                chat.fan_telegram_id,
+                `🔓 $${chat.ticker} hit $${mcK}k. you're in — DM the creator now.\n` +
+                `${tokenUrl}`,
+              );
+            } catch {}
+          }
 
           console.log(`[poller] Chat ${chat.chat_id} unlocked at MC $${mc}`);
         }

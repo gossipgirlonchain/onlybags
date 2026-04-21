@@ -1,7 +1,16 @@
-export function buildTweetUrl(ticker: string, thresholdK: number, tokenUrl: string): string {
+export function buildTweetUrl(
+  ticker: string,
+  thresholdK: number,
+  tokenUrl: string,
+  fanHandle?: string | null,
+): string {
+  const opener = fanHandle
+    ? `@${fanHandle} wants in my dms`
+    : 'someone wants in my dms';
   const text = [
-    'someone wants in my dms',
+    opener,
     `pump $${ticker} to $${thresholdK}k to find out if i reply`,
+    `verified by @gatekeepfunbot`,
     tokenUrl,
   ].join('\n');
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;

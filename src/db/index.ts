@@ -68,5 +68,31 @@ export async function initDB() {
     END $$;
   `);
 
+  // Per-platform ticker registry: uniqueness across all chats, case-insensitive
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_chats_ticker_unique
+    ON chats (UPPER(ticker));
+  `);
+
+  // Requests table: fan-proposed ticker awaiting creator approval
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS requests (
+      id SERIAL PRIMARY KEY,
+      fan_telegram_id BIGINT NOT NULL,
+      fan_username TEXT,
+      creator_telegram_id BIGINT NOT NULL REFERENCES creators(telegram_user_id),
+      proposed_ticker TEXT NOT NULL,
+      threshold_usd INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      decided_at TIMESTAMPTZ,
+      launch_id TEXT
+    );
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_requests_pending
+    ON requests (creator_telegram_id) WHERE status = 'pending';
+  `);
+
   console.log('Database initialized');
 }

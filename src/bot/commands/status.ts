@@ -13,7 +13,7 @@ export async function statusCommand(ctx: Context) {
 
   const chats = await getChatsByCreator(userId);
   if (chats.length === 0) {
-    await ctx.reply('no locked chats yet. type /lock to gate a conversation');
+    await ctx.reply('no active gates yet. fans request access via /request @yourhandle');
     return;
   }
 
@@ -31,13 +31,14 @@ export async function statusCommand(ctx: Context) {
     const pct = Math.min(Math.round((mc / chat.threshold_usd) * 100), 100);
     const thresholdK = chat.threshold_usd / 1000;
 
+    const fanLabel = chat.fan_username ? `@${chat.fan_username}` : 'fan';
     if (chat.unlocked) {
-      lines.push(`🔓 $${chat.ticker}, unlocked\nMC: $${mc.toLocaleString()}`);
+      lines.push(`🔓 $${chat.ticker} (${fanLabel}), unlocked — closed to new buyers\nMC: $${mc.toLocaleString()}`);
     } else if (!chat.token_address) {
-      lines.push(`⏳ $${chat.ticker}, deploying`);
+      lines.push(`⏳ $${chat.ticker} (${fanLabel}), deploying`);
     } else {
       lines.push(
-        `🔒 $${chat.ticker}\n` +
+        `🔒 $${chat.ticker} for ${fanLabel}\n` +
         `${progressBar(pct)} ${pct}%\n` +
         `MC: $${mc.toLocaleString()} / $${thresholdK}k`,
       );

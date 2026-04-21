@@ -5,6 +5,8 @@ export interface Chat {
   launch_id: string;
   chat_id: number;
   creator_telegram_id: number;
+  fan_telegram_id: number | null;
+  fan_username: string | null;
   ticker: string;
   token_address: string | null;
   threshold_usd: number;
@@ -44,12 +46,14 @@ export async function createChat(
   creatorTelegramId: number,
   ticker: string,
   thresholdUsd: number,
+  fanTelegramId?: number,
+  fanUsername?: string | null,
 ): Promise<Chat> {
   const { rows } = await pool.query(
-    `INSERT INTO chats (launch_id, chat_id, creator_telegram_id, ticker, threshold_usd)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO chats (launch_id, chat_id, creator_telegram_id, ticker, threshold_usd, fan_telegram_id, fan_username)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
-    [launchId, chatId, creatorTelegramId, ticker, thresholdUsd],
+    [launchId, chatId, creatorTelegramId, ticker, thresholdUsd, fanTelegramId ?? null, fanUsername ?? null],
   );
   return rows[0];
 }
