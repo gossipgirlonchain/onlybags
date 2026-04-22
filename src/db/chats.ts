@@ -78,3 +78,35 @@ export async function markChatUnlocked(chatId: number): Promise<void> {
     [chatId],
   );
 }
+
+export async function isTickerTaken(ticker: string): Promise<boolean> {
+  const { rows } = await pool.query(
+    `SELECT 1 FROM chats WHERE UPPER(ticker) = UPPER($1) LIMIT 1`,
+    [ticker],
+  );
+  return rows.length > 0;
+}
+
+export async function getChatByTicker(ticker: string): Promise<Chat | null> {
+  const { rows } = await pool.query(
+    `SELECT * FROM chats WHERE UPPER(ticker) = UPPER($1) LIMIT 1`,
+    [ticker],
+  );
+  return rows[0] ?? null;
+}
+
+export async function attachFanToChat(
+  launchId: string,
+  fanTelegramId: number,
+  fanUsername: string | null,
+): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    `UPDATE chats
+       SET fan_telegram_id = $1,
+           fan_username = COALESCE(fan_username, $2)
+     WHERE launch_id = $3
+       AND fan_telegram_id IS NULL`,
+    [fanTelegramId, fanUsername, launchId],
+  );
+  return (rowCount ?? 0) > 0;
+}

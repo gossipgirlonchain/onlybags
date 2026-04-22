@@ -70,7 +70,8 @@ export async function handleSetupInput(ctx: Context) {
       `connected\n\n` +
       `Twitter: @${twitterUsername}\n` +
       `Wallet: \`${wallet}\`\n\n` +
-      `when someone DMs you, type /lock to gate the conversation with a token`,
+      `when someone DMs you, come back here and run /lock @theirhandle ` +
+      `to mint a gate token. i'll give you a message to paste in your chat with them.`,
       { parse_mode: 'Markdown' },
     );
     return true;

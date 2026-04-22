@@ -1,6 +1,5 @@
 const MIN_LEN = 3;
 const MAX_LEN = 10;
-const SUBSTRING_LEN = 3;
 
 export interface TickerValidation {
   ok: boolean;
@@ -21,29 +20,15 @@ export function validateTickerShape(ticker: string): TickerValidation {
   return { ok: true };
 }
 
-// At least SUBSTRING_LEN consecutive chars from creator handle must appear in ticker
-export function containsCreatorSubstring(ticker: string, creatorHandle: string): boolean {
-  const handle = creatorHandle.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-  if (handle.length < SUBSTRING_LEN) {
-    return ticker.includes(handle);
-  }
-  for (let i = 0; i <= handle.length - SUBSTRING_LEN; i++) {
-    if (ticker.includes(handle.slice(i, i + SUBSTRING_LEN))) return true;
-  }
-  return false;
-}
-
 // Default fallback ticker: CREATOR + FAN truncated to 10 chars
 export function defaultTicker(creatorHandle: string, fanHandle: string): string {
   const c = creatorHandle.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   const f = fanHandle.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   if (c.length === 0 && f.length === 0) return 'GATE';
-  // Allocate budget: prefer 5/5 split, but borrow from one side if the other is shorter
   let cBudget = Math.min(c.length, 5);
   let fBudget = Math.min(f.length, MAX_LEN - cBudget);
   if (cBudget + fBudget < MAX_LEN) {
     cBudget = Math.min(c.length, MAX_LEN - fBudget);
   }
-  const ticker = (c.slice(0, cBudget) + f.slice(0, fBudget)).slice(0, MAX_LEN);
-  return ticker || 'GATE';
+  return (c.slice(0, cBudget) + f.slice(0, fBudget)).slice(0, MAX_LEN) || 'GATE';
 }

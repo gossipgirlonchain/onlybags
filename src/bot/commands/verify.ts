@@ -1,5 +1,5 @@
 import { Context } from 'grammy';
-import { getChatByTicker } from '../../db/requests';
+import { getChatByTicker } from '../../db/chats';
 import { getCreator } from '../../db/creators';
 import { normalizeTicker } from '../../utils/ticker';
 
